@@ -1,7 +1,8 @@
+import 'package:barcode_scanner_poc/barcode_scanner_poc_web.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
-// ✅ Importación correcta del plugin usando el nombre 'barcode_scanner_poc'
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:barcode_scanner_poc/barcode_scanner_poc.dart';
 
 void main() {
@@ -18,11 +19,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String _barcodeValue = 'Unknown';
 
-  // Lógica para escanear el código de barras
   Future<void> scanBarcode() async {
     String? barcodeValue;
     try {
-      // ✅ Llamada correcta al método del plugin, que usa la clase BarcodeScannerPoc
       barcodeValue = await BarcodeScannerPoc.scanBarcode();
     } on PlatformException {
       barcodeValue = 'Failed to get barcode value.';
@@ -46,10 +45,24 @@ class _MyAppState extends State<MyApp> {
             children: <Widget>[
               const Text('Presiona el botón para escanear un código:'),
               Text('Valor escaneado: $_barcodeValue\n'),
-              ElevatedButton(
-                onPressed: scanBarcode,
-                child: const Text('Escanear Código de Barras'),
-              ),
+              if (kIsWeb)
+                // ✅ Corrección: Envuelve el widget en un SizedBox para darle un tamaño.
+                SizedBox(
+                  width: 300, // Puedes ajustar el tamaño
+                  height: 300,
+                  child: BarcodeScannerPocWebWidget(
+                    onScan: (code) {
+                      setState(() {
+                        _barcodeValue = code;
+                      });
+                    },
+                  ),
+                )
+              else
+                ElevatedButton(
+                  onPressed: scanBarcode,
+                  child: const Text('Escanear Código de Barras'),
+                ),
             ],
           ),
         ),
