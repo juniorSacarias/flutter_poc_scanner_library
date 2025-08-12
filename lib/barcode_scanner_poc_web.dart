@@ -1,10 +1,8 @@
-// ignore: avoid_web_libraries_in_flutter
-import 'package:flutter/widgets.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:ui' as ui;
-import 'dart:ui_web' as ui_web;
+import 'package:flutter/widgets.dart';
 import 'dart:html' as html;
 import 'dart:js_interop';
+import 'dart:ui_web' as ui_web;
 
 @JS('startHtml5Qrcode')
 external void startHtml5Qrcode(
@@ -31,25 +29,24 @@ class _BarcodeScannerPocWebWidgetState
   void initState() {
     super.initState();
     if (kIsWeb && !_registered) {
-      ui_web.platformViewRegistry.registerViewFactory(_elementId, (int viewId) {
-        final div = html.DivElement()..id = _elementId;
-        return div;
-      });
+      ui_web.platformViewRegistry.registerViewFactory(
+        _elementId,
+        (int viewId) => html.DivElement()..id = _elementId,
+      );
       _registered = true;
     }
 
-    // ✅ La corrección se aplica aquí: añade un pequeño retardo.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (kIsWeb) {
         Future.delayed(const Duration(milliseconds: 100), () {
           startHtml5Qrcode(
             _elementId.toJS,
-            (JSString code) {
+            ((JSString code) {
               widget.onScan(code.toDart);
-            }.toJS,
-            (JSString error) {
-              // Manejo de errores opcional
-            }.toJS,
+            }).toJS,
+            ((JSString error) {
+              // Manejo opcional de error
+            }).toJS,
           );
         });
       }

@@ -1,21 +1,16 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
+import 'package:barcode_scanner_poc/barcode_scanner_poc_platform_interface.dart';
+import 'package:flutter/material.dart';
 
 class BarcodeScannerPoc {
-  static const MethodChannel _channel = MethodChannel('barcode_scanner_poc');
-
   static Future<String?> scanBarcode() async {
     try {
-      final String? barcodeValue = await _channel.invokeMethod('scanBarcode');
-      return barcodeValue;
-    } on PlatformException catch (e) {
-      debugPrint("Error to process the barcode: '${e.message}'");
+      return await BarcodeScannerPocPlatform.instance.scanBarcode();
+    } catch (e) {
+      debugPrint("Error to process the barcode: '$e'");
       return null;
     }
   }
 
-  static Future<String?> get platformVersion async {
-    final String? version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
-  }
+  static Future<String?> get platformVersion =>
+      BarcodeScannerPocPlatform.instance.getPlatformVersion();
 }
