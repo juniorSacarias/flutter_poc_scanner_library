@@ -1,9 +1,10 @@
 import Flutter
 import UIKit
+import AVFoundation
 
 public class BarcodeScannerPocPlugin: NSObject, FlutterPlugin {
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let channel = FlutterMethodChannel(name: "barcode_scanner_poc", binaryMessenger: registrar.messenger)
+        let channel = FlutterMethodChannel(name: "barcode_scanner_poc", binaryMessenger: registrar.messenger())
         let instance = BarcodeScannerPocPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
@@ -15,15 +16,28 @@ public class BarcodeScannerPocPlugin: NSObject, FlutterPlugin {
         }
         
         if call.method == "scanBarcode" {
-            let scannerViewController = BarcodeScannerViewController()
-            
-            // Definir un closure para manejar el resultado del escaneo
-            scannerViewController.onBarcodeScanned = { barcodeValue in
-                result(barcodeValue)
+            let status = AVCaptureDevice.authorizationStatus(for: .video)
+            if status == .authorized {
+                let scannerViewController = BarcodeScannerViewController(onBarcodeScanned: { barcodeValue in
+                    result(barcodeValue)
+                })
+                rootViewController.present(scannerViewController, animated: true)
+            } else if status == .notDetermined {
+                AVCaptureDevice.requestAccess(for: .video) { granted in
+                    DispatchQueue.main.async {
+                        if granted {
+                            let scannerViewController = BarcodeScannerViewController(onBarcodeScanned: { barcodeValue in
+                                result(barcodeValue)
+                            })
+                            rootViewController.present(scannerViewController, animated: true)
+                        } else {
+                            result(FlutterError(code: "PERMISSION_DENIED", message: "Camera permission denied.", details: nil))
+                        }
+                    }
+                }
+            } else {
+                result(FlutterError(code: "PERMISSION_DENIED", message: "Camera permission denied.", details: nil))
             }
-            
-            // Presentar la vista del escáner
-            rootViewController.present(scannerViewController, animated: true)
         } else {
             result(FlutterMethodNotImplemented)
         }

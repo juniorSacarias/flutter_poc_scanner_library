@@ -7,11 +7,21 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
     // MARK: - Propiedades
     var captureSession: AVCaptureSession!
     var previewLayer: AVCaptureVideoPreviewLayer!
-    var barcodeRequest: VNBarcodeSymbology
     var output: AVCaptureVideoDataOutput?
 
     // Variable para almacenar el resultado del escaneo
     var onBarcodeScanned: ((String?) -> Void)?
+
+    // ✅ Añadido el inicializador requerido para la clase
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // ✅ Inicializador personalizado para pasar el callback
+    init(onBarcodeScanned: @escaping (String?) -> Void) {
+        super.init(nibName: nil, bundle: nil)
+        self.onBarcodeScanned = onBarcodeScanned
+    }
 
     // MARK: - Ciclo de vida de la vista
     override func viewDidLoad() {
@@ -57,7 +67,7 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
             self.captureSession.startRunning()
         }
     }
-
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         if (captureSession?.isRunning == false) {
