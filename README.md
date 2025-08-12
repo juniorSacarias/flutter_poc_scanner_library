@@ -1,0 +1,1 @@
+# flutter_poc_scanner_library
