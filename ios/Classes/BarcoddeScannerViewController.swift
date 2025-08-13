@@ -65,13 +65,16 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
         previewLayer.videoGravity = .resizeAspectFill
         view.layer.addSublayer(previewLayer)
 
-        // --- FLASH BUTTON ---
-        flashButton = UIButton(type: .system)
-        flashButton.frame = CGRect(x: view.bounds.width - 70, y: 40, width: 50, height: 50)
-        flashButton.setImage(UIImage(systemName: "bolt.fill"), for: .normal)
-        flashButton.tintColor = .yellow
-        flashButton.addTarget(self, action: #selector(toggleFlash), for: .touchUpInside)
-        view.addSubview(flashButton)
+        // --- FLASH SIEMPRE ACTIVO ---
+        if let device = self.captureDevice, device.hasTorch {
+            do {
+                try device.lockForConfiguration()
+                try device.setTorchModeOn(level: 1.0)
+                device.unlockForConfiguration()
+            } catch {
+                print("No se pudo activar el flash: \(error)")
+            }
+        }
 
 
         // --- ZOOM AL 50% ---
@@ -125,23 +128,8 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
         }
     }
 
-    // --- FLASH ---
-    @objc func toggleFlash() {
-        guard let device = captureDevice, device.hasTorch else { return }
-        do {
-            try device.lockForConfiguration()
-            if device.torchMode == .on {
-                device.torchMode = .off
-                flashButton.setImage(UIImage(systemName: "bolt.slash.fill"), for: .normal)
-            } else {
-                try device.setTorchModeOn(level: 1.0)
-                flashButton.setImage(UIImage(systemName: "bolt.fill"), for: .normal)
-            }
-            device.unlockForConfiguration()
-        } catch {
-            print("No se pudo cambiar el estado del flash: \(error)")
-        }
-    }
+    // --- FLASH SIEMPRE ACTIVO ---
+    // (No se necesita método de toggle por ahora)
 
     // --- ZOOM AL 50% ---
     func setZoomTo50Percent() {
