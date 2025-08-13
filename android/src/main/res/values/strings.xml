@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">BarcodeScannerPoc</string>
+    <string name="toggle_flash">Alternar linterna</string>
+</resources>

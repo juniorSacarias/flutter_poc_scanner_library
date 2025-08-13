@@ -5,9 +5,15 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
+import android.view.View // Importar la clase View
+import android.widget.ImageButton
+import android.widget.Toast
+import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.barcode.BarcodeScanner
@@ -15,22 +21,23 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.Executors
 
-
-import android.util.Log
-import android.widget.Toast
-import androidx.annotation.OptIn
-import androidx.camera.view.PreviewView
-
 class BarcodeScannerActivity : AppCompatActivity() {
     private lateinit var previewView: PreviewView
     private lateinit var barcodeScanner: BarcodeScanner
     private val cameraExecutor = Executors.newSingleThreadExecutor()
     private val requestCameraPermission = 10
 
+    // NUEVA LÓGICA: variables para el control de la linterna
+    private var camera: Camera? = null
+    private lateinit var flashButton: ImageButton
+    private var isFlashOn = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_barcode_scanner)
         previewView = findViewById(R.id.previewView)
+        flashButton = findViewById(R.id.flashButton)
+        flashButton.visibility = View.VISIBLE // Mostrar siempre el botón
         barcodeScanner = BarcodeScanning.getClient()
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
@@ -45,7 +52,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         if (requestCode == requestCameraPermission && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             startCamera()
         } else {
-            Toast.makeText(this, "Camera permissions delegated", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Permisos de cámara denegados", Toast.LENGTH_SHORT).show()
             finish()
         }
     }
@@ -64,15 +71,22 @@ class BarcodeScannerActivity : AppCompatActivity() {
             }
             try {
                 cameraProvider.unbindAll()
-                val camera = cameraProvider.bindToLifecycle(
+                camera = cameraProvider.bindToLifecycle(
                     this,
                     CameraSelector.DEFAULT_BACK_CAMERA,
                     preview,
                     imageAnalysis
                 )
 
+                // NUEVA LÓGICA: Activar siempre el flash y mostrar el botón
+                camera?.cameraControl?.enableTorch(true)
+                isFlashOn = true
+                flashButton.setImageResource(R.drawable.ic_flash_on)
+                flashButton.visibility = View.VISIBLE
+                setupFlashButton()
+
                 // --- Control de enfoque automático en el centro ---
-                val cameraControl = camera.cameraControl
+                val cameraControl = camera!!.cameraControl
                 val factory = SurfaceOrientedMeteringPointFactory(
                     previewView.width.toFloat(),
                     previewView.height.toFloat()
@@ -85,19 +99,33 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 cameraControl.startFocusAndMetering(action)
 
                 // --- Control de zoom (ejemplo: zoom al 50%) ---
-                cameraControl.setLinearZoom(0.5f) // 0.0f = sin zoom, 1.0f = máximo zoom
+                cameraControl.setLinearZoom(0.5f)
 
                 // --- Control de exposición (ejemplo: compensación +1 si está soportado) ---
-                val cameraInfo = camera.cameraInfo
+                val cameraInfo = camera!!.cameraInfo
                 val exposureRange = cameraInfo.exposureState.exposureCompensationRange
                 if (exposureRange.contains(1)) {
                     cameraControl.setExposureCompensationIndex(1)
                 }
 
             } catch (exc: Exception) {
-                Log.e("BarcodeScanner", "Error to start the camera", exc)
+                Log.e("BarcodeScanner", "Error al iniciar la cámara", exc)
             }
         }, ContextCompat.getMainExecutor(this))
+    }
+
+    // NUEVA LÓGICA: método para gestionar el botón de la linterna
+    private fun setupFlashButton() {
+        flashButton.setOnClickListener {
+            isFlashOn = !isFlashOn
+            camera?.cameraControl?.enableTorch(isFlashOn)
+
+            if (isFlashOn) {
+                flashButton.setImageResource(R.drawable.ic_flash_on)
+            } else {
+                flashButton.setImageResource(R.drawable.ic_flash_off)
+            }
+        }
     }
 
     @OptIn(ExperimentalGetImage::class)
@@ -117,7 +145,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     }
                 }
                 .addOnFailureListener {
-                    Log.e("BarcodeScanner", "Error to process the code bar", it)
+                    Log.e("BarcodeScanner", "Error al procesar el código de barras", it)
                 }
                 .addOnCompleteListener {
                     imageProxy.close()
