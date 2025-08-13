@@ -18,13 +18,14 @@ import java.util.concurrent.Executors
 
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.OptIn
 import androidx.camera.view.PreviewView
 
 class BarcodeScannerActivity : AppCompatActivity() {
     private lateinit var previewView: PreviewView
     private lateinit var barcodeScanner: BarcodeScanner
     private val cameraExecutor = Executors.newSingleThreadExecutor()
-    private val REQUEST_CAMERA_PERMISSION = 10
+    private val requestCameraPermission = 10
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,16 +36,16 @@ class BarcodeScannerActivity : AppCompatActivity() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             startCamera()
         } else {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION)
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), requestCameraPermission)
         }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CAMERA_PERMISSION && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == requestCameraPermission && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             startCamera()
         } else {
-            Toast.makeText(this, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Camera permissions delegated", Toast.LENGTH_SHORT).show()
             finish()
         }
     }
@@ -57,19 +58,49 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 it.setSurfaceProvider(previewView.surfaceProvider)
             }
             val imageAnalysis = ImageAnalysis.Builder().build().also {
-                it.setAnalyzer(cameraExecutor, { imageProxy ->
+                it.setAnalyzer(cameraExecutor) { imageProxy ->
                     processImageProxy(imageProxy)
-                })
+                }
             }
             try {
                 cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageAnalysis)
+                val camera = cameraProvider.bindToLifecycle(
+                    this,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    preview,
+                    imageAnalysis
+                )
+
+                // --- Control de enfoque automático en el centro ---
+                val cameraControl = camera.cameraControl
+                val factory = SurfaceOrientedMeteringPointFactory(
+                    previewView.width.toFloat(),
+                    previewView.height.toFloat()
+                )
+                val point = factory.createPoint(
+                    previewView.width / 2f,
+                    previewView.height / 2f
+                )
+                val action = FocusMeteringAction.Builder(point).build()
+                cameraControl.startFocusAndMetering(action)
+
+                // --- Control de zoom (ejemplo: zoom al 50%) ---
+                cameraControl.setLinearZoom(0.5f) // 0.0f = sin zoom, 1.0f = máximo zoom
+
+                // --- Control de exposición (ejemplo: compensación +1 si está soportado) ---
+                val cameraInfo = camera.cameraInfo
+                val exposureRange = cameraInfo.exposureState.exposureCompensationRange
+                if (exposureRange.contains(1)) {
+                    cameraControl.setExposureCompensationIndex(1)
+                }
+
             } catch (exc: Exception) {
-                Log.e("BarcodeScanner", "Error al iniciar la cámara", exc)
+                Log.e("BarcodeScanner", "Error to start the camera", exc)
             }
         }, ContextCompat.getMainExecutor(this))
     }
 
+    @OptIn(ExperimentalGetImage::class)
     private fun processImageProxy(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image
         if (mediaImage != null) {
@@ -86,7 +117,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     }
                 }
                 .addOnFailureListener {
-                    Log.e("BarcodeScanner", "Error al analizar el código de barras", it)
+                    Log.e("BarcodeScanner", "Error to process the code bar", it)
                 }
                 .addOnCompleteListener {
                     imageProxy.close()
