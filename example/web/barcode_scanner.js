@@ -3,8 +3,7 @@ window.startHtml5Qrcode = function(elementId, onSuccess, onError) {
   html5QrCode.start(
     { facingMode: "environment" },
     {
-      fps: 10,
-      qrbox: 250
+      fps: 60,
     },
     (decodedText, decodedResult) => {
       if (onSuccess) {

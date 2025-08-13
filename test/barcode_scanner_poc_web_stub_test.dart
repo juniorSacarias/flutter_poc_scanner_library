@@ -8,7 +8,7 @@ void main() {
       await tester.pumpWidget(
         const Directionality(
           textDirection: TextDirection.ltr,
-          child: BarcodeScannerPocWebWidget(onScan: _dummyOnScan),
+          child: BarcodeScannerPocWebWidget(onScan: _dummyOnScan, config: null),
         ),
       );
       expect(

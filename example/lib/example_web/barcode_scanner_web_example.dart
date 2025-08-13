@@ -1,6 +1,8 @@
+import 'package:barcode_scanner_poc/barcode_scanner_poc_web.dart';
 import 'package:flutter/material.dart';
 import 'package:barcode_scanner_poc/barcode_scanner_poc_web_stub.dart'
-    if (dart.library.html) 'package:barcode_scanner_poc/barcode_scanner_poc_web.dart';
+    if (dart.library.html) 'package:barcode_scanner_poc/barcode_scanner_poc_web.dart'
+    hide BarcodeScannerPocWebWidget;
 
 class BarcodeScannerWebExample extends StatefulWidget {
   const BarcodeScannerWebExample({super.key});
@@ -21,16 +23,35 @@ class _BarcodeScannerWebExampleState extends State<BarcodeScannerWebExample> {
         const Text('Escanea un código usando la cámara web:'),
         Text('Valor escaneado: $_barcodeValue'),
         const SizedBox(height: 20),
-        SizedBox(
-          width: 300,
-          height: 300,
-          child: BarcodeScannerPocWebWidget(
-            onScan: (code) {
-              setState(() {
-                _barcodeValue = code;
-              });
-            },
-          ),
+        // Mostrar la configuración actual en pantalla
+        Builder(
+          builder: (context) {
+            const webOptions = BarcodeScannerPocWebOptions(
+              width: 1280,
+              height: 720,
+              fps: 60,
+              qrbox: 400,
+              focusMode: 'continuous',
+            );
+            return Column(
+              children: [
+                Text('Config actual: ${webOptions.toWebConfig()}'),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: 800,
+                  height: 800,
+                  child: BarcodeScannerPocWebWidget(
+                    onScan: (code) {
+                      setState(() {
+                        _barcodeValue = code;
+                      });
+                    },
+                    web: webOptions,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );

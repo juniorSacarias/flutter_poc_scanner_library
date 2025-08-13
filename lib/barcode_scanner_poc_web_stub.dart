@@ -4,6 +4,7 @@ class BarcodeScannerPocWebWidget extends StatelessWidget {
   const BarcodeScannerPocWebWidget({
     super.key,
     required void Function(String) onScan,
+    required config,
   });
 
   @override
