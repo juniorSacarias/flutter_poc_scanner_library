@@ -1,8 +1,9 @@
+// ignore_for_file: deprecated_member_use, avoid_web_libraries_in_flutter
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/widgets.dart';
 import 'dart:html' as html;
 import 'dart:js_interop';
-import 'package:js/js.dart' hide JS;
 import 'package:js/js_util.dart' as js_util;
 import 'dart:ui_web' as ui_web;
 
