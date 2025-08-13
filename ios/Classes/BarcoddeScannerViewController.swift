@@ -8,6 +8,8 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
     var captureSession: AVCaptureSession!
     var previewLayer: AVCaptureVideoPreviewLayer!
     var output: AVCaptureVideoDataOutput?
+    var captureDevice: AVCaptureDevice?
+    var flashButton: UIButton!
 
     // Variable para almacenar el resultado del escaneo
     var onBarcodeScanned: ((String?) -> Void)?
@@ -32,6 +34,7 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
 
         // Configurar la cámara
         guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else { return }
+        self.captureDevice = videoCaptureDevice
         let videoInput: AVCaptureDeviceInput
 
         do {
@@ -61,6 +64,21 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
         previewLayer.frame = view.layer.bounds
         previewLayer.videoGravity = .resizeAspectFill
         view.layer.addSublayer(previewLayer)
+
+        // --- FLASH BUTTON ---
+        flashButton = UIButton(type: .system)
+        flashButton.frame = CGRect(x: view.bounds.width - 70, y: 40, width: 50, height: 50)
+        flashButton.setImage(UIImage(systemName: "bolt.fill"), for: .normal)
+        flashButton.tintColor = .yellow
+        flashButton.addTarget(self, action: #selector(toggleFlash), for: .touchUpInside)
+        view.addSubview(flashButton)
+
+
+        // --- ZOOM AL 50% ---
+        setZoomTo50Percent()
+
+        // --- AUTOFOCUS EN EL CENTRO ---
+        setAutofocusToCenter()
 
         // Iniciar la sesión
         DispatchQueue.global(qos: .background).async {
@@ -104,6 +122,51 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
             try handler.perform([barcodeRequest])
         } catch {
             print("Error al realizar la solicitud de detección de códigos de barras: \(error)")
+        }
+    }
+
+    // --- FLASH ---
+    @objc func toggleFlash() {
+        guard let device = captureDevice, device.hasTorch else { return }
+        do {
+            try device.lockForConfiguration()
+            if device.torchMode == .on {
+                device.torchMode = .off
+                flashButton.setImage(UIImage(systemName: "bolt.slash.fill"), for: .normal)
+            } else {
+                try device.setTorchModeOn(level: 1.0)
+                flashButton.setImage(UIImage(systemName: "bolt.fill"), for: .normal)
+            }
+            device.unlockForConfiguration()
+        } catch {
+            print("No se pudo cambiar el estado del flash: \(error)")
+        }
+    }
+
+    // --- ZOOM AL 50% ---
+    func setZoomTo50Percent() {
+        guard let device = captureDevice else { return }
+        let maxZoom = device.activeFormat.videoMaxZoomFactor
+        let zoomFactor = maxZoom > 1.0 ? maxZoom * 0.5 : 1.0
+        do {
+            try device.lockForConfiguration()
+            device.videoZoomFactor = zoomFactor
+            device.unlockForConfiguration()
+        } catch {
+            print("No se pudo cambiar el zoom: \(error)")
+        }
+    }
+
+    // --- AUTOFOCUS EN EL CENTRO ---
+    func setAutofocusToCenter() {
+        guard let device = captureDevice, device.isFocusPointOfInterestSupported, device.isFocusModeSupported(.continuousAutoFocus) else { return }
+        do {
+            try device.lockForConfiguration()
+            device.focusPointOfInterest = CGPoint(x: 0.5, y: 0.5)
+            device.focusMode = .continuousAutoFocus
+            device.unlockForConfiguration()
+        } catch {
+            print("No se pudo configurar el autofocus: \(error)")
         }
     }
 }
