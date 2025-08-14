@@ -1,8 +1,5 @@
 import 'package:barcode_scanner_poc/barcode_scanner_poc_web.dart';
 import 'package:flutter/material.dart';
-import 'package:barcode_scanner_poc/barcode_scanner_poc_web_stub.dart'
-    if (dart.library.html) 'package:barcode_scanner_poc/barcode_scanner_poc_web.dart'
-    hide BarcodeScannerPocWebWidget;
 
 class BarcodeScannerWebExample extends StatefulWidget {
   const BarcodeScannerWebExample({super.key});
