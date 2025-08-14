@@ -1,3 +1,7 @@
+## 0.0.4
+
+* Updated library documentation to reflect recent changes.
+
 
 ## 0.0.3
 
