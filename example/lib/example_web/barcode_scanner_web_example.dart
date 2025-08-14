@@ -1,8 +1,5 @@
 import 'package:barcode_scanner_poc/barcode_scanner_poc_web.dart';
 import 'package:flutter/material.dart';
-import 'package:barcode_scanner_poc/barcode_scanner_poc_web_stub.dart'
-    if (dart.library.html) 'package:barcode_scanner_poc/barcode_scanner_poc_web.dart'
-    hide BarcodeScannerPocWebWidget;
 
 class BarcodeScannerWebExample extends StatefulWidget {
   const BarcodeScannerWebExample({super.key});
@@ -32,14 +29,15 @@ class _BarcodeScannerWebExampleState extends State<BarcodeScannerWebExample> {
               fps: 60,
               qrbox: 400,
               focusMode: 'continuous',
+              extraOptions: {'showTorchButtonIfSupported': true},
             );
             return Column(
               children: [
                 Text('Config actual: ${webOptions.toWebConfig()}'),
                 const SizedBox(height: 10),
                 SizedBox(
-                  width: 800,
-                  height: 800,
+                  width: webOptions.width?.toDouble() ?? 800,
+                  height: webOptions.height?.toDouble() ?? 800,
                   child: BarcodeScannerPocWebWidget(
                     onScan: (code) {
                       setState(() {

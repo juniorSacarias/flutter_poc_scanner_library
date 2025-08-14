@@ -17,7 +17,9 @@ import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.barcode.BarcodeScanner
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.Executors
 
@@ -31,6 +33,14 @@ class BarcodeScannerActivity : AppCompatActivity() {
     private var camera: Camera? = null
     private lateinit var flashButton: ImageButton
     private var isFlashOn = false
+    private var scanMethodOptions = BarcodeScannerOptions.Builder().setBarcodeFormats(
+        Barcode.FORMAT_EAN_8,
+        Barcode.FORMAT_EAN_13,
+        Barcode.FORMAT_ITF,
+        Barcode.FORMAT_CODE_128,
+        Barcode.FORMAT_QR_CODE,
+        Barcode.FORMAT_DATA_MATRIX
+    ).build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,7 +48,7 @@ class BarcodeScannerActivity : AppCompatActivity() {
         previewView = findViewById(R.id.previewView)
         flashButton = findViewById(R.id.flashButton)
         flashButton.visibility = View.VISIBLE // Mostrar siempre el botón
-        barcodeScanner = BarcodeScanning.getClient()
+        barcodeScanner = BarcodeScanning.getClient(scanMethodOptions)
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             startCamera()
