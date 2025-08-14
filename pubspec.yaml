@@ -35,3 +35,5 @@ flutter:
       web:
         pluginClass: BarcodeScannerPocWeb
         fileName: barcode_scanner_poc_web.dart
+  assets:
+    - lib/web/barcode_scanner.js

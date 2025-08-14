@@ -36,8 +36,8 @@ class _BarcodeScannerWebExampleState extends State<BarcodeScannerWebExample> {
                 Text('Config actual: ${webOptions.toWebConfig()}'),
                 const SizedBox(height: 10),
                 SizedBox(
-                  width: 800,
-                  height: 800,
+                  width: webOptions.width?.toDouble() ?? 800,
+                  height: webOptions.height?.toDouble() ?? 800,
                   child: BarcodeScannerPocWebWidget(
                     onScan: (code) {
                       setState(() {

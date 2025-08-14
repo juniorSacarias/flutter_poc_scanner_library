@@ -1,11 +1,10 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/widgets.dart';
-import 'dart:html' as html;
+import 'package:web/web.dart' as web;
 import 'dart:js_interop';
 import 'package:js/js_util.dart' as js_util;
 import 'dart:ui_web' as ui_web;
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-import 'barcode_scanner_poc_platform_interface.dart';
 
 class BarcodeScannerPocWeb {
   static void registerWith(Registrar registrar) {}
@@ -15,30 +14,35 @@ void _injectBarcodeScannerJs() {
   const html5QrcodeId = 'html5-qrcode-js';
   const scannerId = 'barcode-scanner-js';
 
-  if (html.document.getElementById(scannerId) != null) return;
+  final doc = web.window.document;
+  if (doc.getElementById(scannerId) != null) return;
 
-  if (html.document.getElementById(html5QrcodeId) != null) {
-    final scannerScript = html.ScriptElement()
-      ..id = scannerId
-      ..type = 'application/javascript'
-      ..src = 'packages/barcode_scanner_poc/web/barcode_scanner.js';
-    html.document.body!.append(scannerScript);
+  if (doc.getElementById(html5QrcodeId) != null) {
+    final scannerScript = doc.createElement('script') as web.HTMLScriptElement;
+    scannerScript.id = scannerId;
+    scannerScript.type = 'application/javascript';
+    scannerScript.src =
+        'assets/packages/barcode_scanner_poc/lib/web/barcode_scanner.js';
+    doc.body!.appendChild(scannerScript);
     return;
   }
 
-  final html5QrcodeScript = html.ScriptElement()
-    ..id = html5QrcodeId
-    ..type = 'application/javascript'
-    ..defer = true
-    ..src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
-  html5QrcodeScript.onLoad.listen((_) {
-    final scannerScript = html.ScriptElement()
-      ..id = scannerId
-      ..type = 'application/javascript'
-      ..src = 'packages/barcode_scanner_poc/web/barcode_scanner.js';
-    html.document.body!.append(scannerScript);
+  final html5QrcodeScript =
+      doc.createElement('script') as web.HTMLScriptElement;
+  html5QrcodeScript.id = html5QrcodeId;
+  html5QrcodeScript.type = 'application/javascript';
+  html5QrcodeScript.defer = true;
+  html5QrcodeScript.src =
+      'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+  html5QrcodeScript.onLoad.listen((event) {
+    final scannerScript = doc.createElement('script') as web.HTMLScriptElement;
+    scannerScript.id = scannerId;
+    scannerScript.type = 'application/javascript';
+    scannerScript.src =
+        'assets/packages/barcode_scanner_poc/lib/web/barcode_scanner.js';
+    doc.body!.appendChild(scannerScript);
   });
-  html.document.body!.append(html5QrcodeScript);
+  doc.body!.appendChild(html5QrcodeScript);
 }
 
 @JS('startHtml5Qrcode')
@@ -104,20 +108,29 @@ class _BarcodeScannerPocWebWidgetState
   void initState() {
     super.initState();
     if (kIsWeb && !_registered) {
-      ui_web.platformViewRegistry.registerViewFactory(
-        _elementId,
-        (int viewId) => html.DivElement()..id = _elementId,
-      );
+      ui_web.platformViewRegistry.registerViewFactory(_elementId, (int viewId) {
+        final div =
+            web.window.document.createElement('div') as web.HTMLDivElement;
+        div.id = _elementId;
+        return div;
+      });
       _registered = true;
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (kIsWeb) {
         _injectBarcodeScannerJs();
-        Future.delayed(const Duration(milliseconds: 200), () {
+        // Espera más tiempo y verifica que la función esté disponible
+        Future.doWhile(() async {
+          await Future.delayed(const Duration(milliseconds: 200));
+          final hasFunction =
+              (js_util.getProperty(js_util.globalThis, 'startHtml5Qrcode') !=
+              null);
+          return !hasFunction;
+        }).then((_) {
           final webConfig = widget.web?.toWebConfig();
           final jsConfig = webConfig != null
-              ? js_util.jsify({'web': webConfig}) as JSAny?
+              ? {'web': webConfig}.jsify()
               : null;
           startHtml5Qrcode(
             _elementId.toJS,
