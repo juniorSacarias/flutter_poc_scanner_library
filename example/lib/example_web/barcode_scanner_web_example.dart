@@ -29,6 +29,7 @@ class _BarcodeScannerWebExampleState extends State<BarcodeScannerWebExample> {
               fps: 60,
               qrbox: 400,
               focusMode: 'continuous',
+              extraOptions: {'showTorchButtonIfSupported': true},
             );
             return Column(
               children: [
