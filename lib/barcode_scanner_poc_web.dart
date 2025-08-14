@@ -1,11 +1,45 @@
-// ignore_for_file: deprecated_member_use, avoid_web_libraries_in_flutter
-
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/widgets.dart';
 import 'dart:html' as html;
 import 'dart:js_interop';
 import 'package:js/js_util.dart' as js_util;
 import 'dart:ui_web' as ui_web;
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'barcode_scanner_poc_platform_interface.dart';
+
+class BarcodeScannerPocWeb {
+  static void registerWith(Registrar registrar) {}
+}
+
+void _injectBarcodeScannerJs() {
+  const html5QrcodeId = 'html5-qrcode-js';
+  const scannerId = 'barcode-scanner-js';
+
+  if (html.document.getElementById(scannerId) != null) return;
+
+  if (html.document.getElementById(html5QrcodeId) != null) {
+    final scannerScript = html.ScriptElement()
+      ..id = scannerId
+      ..type = 'application/javascript'
+      ..src = 'packages/barcode_scanner_poc/web/barcode_scanner.js';
+    html.document.body!.append(scannerScript);
+    return;
+  }
+
+  final html5QrcodeScript = html.ScriptElement()
+    ..id = html5QrcodeId
+    ..type = 'application/javascript'
+    ..defer = true
+    ..src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+  html5QrcodeScript.onLoad.listen((_) {
+    final scannerScript = html.ScriptElement()
+      ..id = scannerId
+      ..type = 'application/javascript'
+      ..src = 'packages/barcode_scanner_poc/web/barcode_scanner.js';
+    html.document.body!.append(scannerScript);
+  });
+  html.document.body!.append(html5QrcodeScript);
+}
 
 @JS('startHtml5Qrcode')
 external void startHtml5Qrcode(
@@ -15,24 +49,12 @@ external void startHtml5Qrcode(
   JSAny? config,
 ]);
 
-/// Opciones específicas para la plataforma web (html5-qrcode)
 class BarcodeScannerPocWebOptions {
-  /// Ancho ideal del video (en píxeles)
   final int? width;
-
-  /// Alto ideal del video (en píxeles)
   final int? height;
-
-  /// FPS de la cámara (mínimo recomendado: 10)
   final int fps;
-
-  /// Tamaño del cuadro de escaneo (en píxeles)
   final int qrbox;
-
-  /// Modo de enfoque (por ejemplo, 'continuous')
   final String? focusMode;
-
-  /// Otros parámetros avanzados
   final Map<String, dynamic>? extraOptions;
 
   const BarcodeScannerPocWebOptions({
@@ -91,7 +113,8 @@ class _BarcodeScannerPocWebWidgetState
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (kIsWeb) {
-        Future.delayed(const Duration(milliseconds: 100), () {
+        _injectBarcodeScannerJs();
+        Future.delayed(const Duration(milliseconds: 200), () {
           final webConfig = widget.web?.toWebConfig();
           final jsConfig = webConfig != null
               ? js_util.jsify({'web': webConfig}) as JSAny?
@@ -101,9 +124,7 @@ class _BarcodeScannerPocWebWidgetState
             ((JSString code) {
               widget.onScan(code.toDart);
             }).toJS,
-            ((JSString error) {
-              // Manejo opcional de error
-            }).toJS,
+            ((JSString error) {}).toJS,
             jsConfig,
           );
         });
