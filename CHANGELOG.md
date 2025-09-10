@@ -1,7 +1,15 @@
-## 0.0.4
+
+## 0.0.5
+
+* Removed custom zoom in iOS camera, now uses the default zoom.
+* Minor improvements to the scanning experience on iOS.
+
 
 * Updated library documentation to reflect recent changes.
 
+## 0.0.4
+
+* None
 
 ## 0.0.3
 
