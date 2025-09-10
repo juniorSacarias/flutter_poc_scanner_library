@@ -1,3 +1,10 @@
+## 0.0.7
+
+* Update scanner iOS
+
+## 0.0.6
+
+* Downgrade js version
 
 ## 0.0.5
 
