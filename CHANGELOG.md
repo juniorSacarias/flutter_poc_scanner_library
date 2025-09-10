@@ -1,3 +1,7 @@
+## 0.0.8
+
+* Fix swift issues
+
 ## 0.0.7
 
 * Update scanner iOS

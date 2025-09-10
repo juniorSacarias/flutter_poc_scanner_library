@@ -84,12 +84,13 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
             self.captureSession.startRunning()
         }
     }
-    
 
-        if (captureSession?.isRunning == false) {
-            captureSession.startRunning()
+        override func viewWillAppear(_ animated: Bool) {
+            super.viewWillAppear(animated)
+            if (captureSession?.isRunning == false) {
+                captureSession.startRunning()
+            }
         }
-    }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
