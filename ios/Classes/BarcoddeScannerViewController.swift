@@ -76,10 +76,6 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
             }
         }
 
-
-        // --- ZOOM AL 50% ---
-        setZoomTo50Percent()
-
         // --- AUTOFOCUS EN EL CENTRO ---
         setAutofocusToCenter()
 
@@ -89,8 +85,7 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
         }
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+
         if (captureSession?.isRunning == false) {
             captureSession.startRunning()
         }
@@ -125,23 +120,6 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
             try handler.perform([barcodeRequest])
         } catch {
             print("Error al realizar la solicitud de detección de códigos de barras: \(error)")
-        }
-    }
-
-    // --- FLASH SIEMPRE ACTIVO ---
-    // (No se necesita método de toggle por ahora)
-
-    // --- ZOOM AL 50% ---
-    func setZoomTo50Percent() {
-        guard let device = captureDevice else { return }
-        let maxZoom = device.activeFormat.videoMaxZoomFactor
-        let zoomFactor = maxZoom > 1.0 ? maxZoom * 0.5 : 1.0
-        do {
-            try device.lockForConfiguration()
-            device.videoZoomFactor = zoomFactor
-            device.unlockForConfiguration()
-        } catch {
-            print("No se pudo cambiar el zoom: \(error)")
         }
     }
 
