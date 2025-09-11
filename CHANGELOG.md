@@ -1,3 +1,7 @@
+## 0.0.9
+
+* Add Torch funcionality in iOS scanner
+
 ## 0.0.8
 
 * Fix swift issues
