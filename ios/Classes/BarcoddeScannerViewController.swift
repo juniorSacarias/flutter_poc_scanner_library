@@ -66,17 +66,6 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
         previewLayer.videoGravity = .resizeAspectFill
         view.layer.addSublayer(previewLayer)
 
-        // --- FLASH SIEMPRE ACTIVO ---
-        if let device = self.captureDevice, device.hasTorch {
-            do {
-                try device.lockForConfiguration()
-                try device.setTorchModeOn(level: 1.0)
-                device.unlockForConfiguration()
-            } catch {
-                print("No se pudo activar el flash: \(error)")
-            }
-        }
-
         // --- AUTOFOCUS EN EL CENTRO ---
         setAutofocusToCenter()
 

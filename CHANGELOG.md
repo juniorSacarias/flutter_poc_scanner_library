@@ -1,3 +1,7 @@
+## 0.0.10
+
+* Fix torch funcionality in iOS scanner
+
 ## 0.0.9
 
 * Add Torch funcionality in iOS scanner
