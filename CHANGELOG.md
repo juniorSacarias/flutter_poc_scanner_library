@@ -1,3 +1,7 @@
+## 0.0.12
+
+* fix issues regarding last version of flash
+
 ## 0.0.11
 
 * Delete torch funcionality

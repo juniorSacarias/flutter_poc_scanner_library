@@ -31,8 +31,6 @@ class BarcodeScannerActivity : AppCompatActivity() {
 
     // NUEVA LÓGICA: variables para el control de la linterna
     private var camera: Camera? = null
-    private lateinit var flashButton: ImageButton
-    private var isFlashOn = false
     private var scanMethodOptions = BarcodeScannerOptions.Builder().setBarcodeFormats(
         Barcode.FORMAT_EAN_8,
         Barcode.FORMAT_EAN_13,
@@ -46,8 +44,6 @@ class BarcodeScannerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_barcode_scanner)
         previewView = findViewById(R.id.previewView)
-        flashButton = findViewById(R.id.flashButton)
-        flashButton.visibility = View.VISIBLE // Mostrar siempre el botón
         barcodeScanner = BarcodeScanning.getClient(scanMethodOptions)
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
