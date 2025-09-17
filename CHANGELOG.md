@@ -1,3 +1,7 @@
+## 0.0.11
+
+* Delete torch funcionality
+
 ## 0.0.10
 
 * Fix torch funcionality in iOS scanner
