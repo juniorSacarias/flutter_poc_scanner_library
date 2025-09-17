@@ -9,8 +9,6 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
     var previewLayer: AVCaptureVideoPreviewLayer!
     var output: AVCaptureVideoDataOutput?
     var captureDevice: AVCaptureDevice?
-    var flashButton: UIButton!
-        var isTorchOn: Bool = false
 
     // Variable para almacenar el resultado del escaneo
     var onBarcodeScanned: ((String?) -> Void)?
@@ -73,9 +71,6 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
         DispatchQueue.global(qos: .background).async {
             self.captureSession.startRunning()
         }
-
-        // --- BOTÓN DE LINTERNA ---
-        setupFlashButton()
     }
 
         override func viewWillAppear(_ animated: Bool) {
@@ -129,40 +124,4 @@ class BarcodeScannerViewController: UIViewController, AVCaptureVideoDataOutputSa
             print("No se pudo configurar el autofocus: \(error)")
         }
     }
-
-        // MARK: - Configuración del botón de linterna
-        func setupFlashButton() {
-            flashButton = UIButton(type: .custom)
-            let offImage = UIImage(named: "flash_off")
-            flashButton.setImage(offImage, for: .normal)
-            flashButton.translatesAutoresizingMaskIntoConstraints = false
-            flashButton.addTarget(self, action: #selector(toggleTorch), for: .touchUpInside)
-            view.addSubview(flashButton)
-
-            // Constraints: centrado abajo
-            NSLayoutConstraint.activate([
-                flashButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                flashButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -32),
-                flashButton.widthAnchor.constraint(equalToConstant: 64),
-                flashButton.heightAnchor.constraint(equalToConstant: 64)
-            ])
-        }
-
-        @objc func toggleTorch() {
-            guard let device = captureDevice, device.hasTorch else { return }
-            do {
-                try device.lockForConfiguration()
-                if isTorchOn {
-                    device.torchMode = .off
-                    flashButton.setImage(UIImage(named: "flash_off"), for: .normal)
-                } else {
-                    try device.setTorchModeOn(level: 1.0)
-                    flashButton.setImage(UIImage(named: "flash_on"), for: .normal)
-                }
-                isTorchOn.toggle()
-                device.unlockForConfiguration()
-            } catch {
-                print("No se pudo cambiar el estado de la linterna: \(error)")
-            }
-        }
 }
