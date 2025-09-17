@@ -88,13 +88,6 @@ class BarcodeScannerActivity : AppCompatActivity() {
                     imageAnalysis
                 )
 
-                // NUEVA LÓGICA: Activar siempre el flash y mostrar el botón
-                camera?.cameraControl?.enableTorch(true)
-                isFlashOn = true
-                flashButton.setImageResource(R.drawable.ic_flash_on)
-                flashButton.visibility = View.VISIBLE
-                setupFlashButton()
-
                 // --- Control de enfoque automático en el centro ---
                 val cameraControl = camera!!.cameraControl
                 val factory = SurfaceOrientedMeteringPointFactory(
@@ -122,20 +115,6 @@ class BarcodeScannerActivity : AppCompatActivity() {
                 Log.e("BarcodeScanner", "Error al iniciar la cámara", exc)
             }
         }, ContextCompat.getMainExecutor(this))
-    }
-
-    // NUEVA LÓGICA: método para gestionar el botón de la linterna
-    private fun setupFlashButton() {
-        flashButton.setOnClickListener {
-            isFlashOn = !isFlashOn
-            camera?.cameraControl?.enableTorch(isFlashOn)
-
-            if (isFlashOn) {
-                flashButton.setImageResource(R.drawable.ic_flash_on)
-            } else {
-                flashButton.setImageResource(R.drawable.ic_flash_off)
-            }
-        }
     }
 
     @OptIn(ExperimentalGetImage::class)
